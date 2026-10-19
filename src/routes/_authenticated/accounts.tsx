@@ -9,8 +9,8 @@ export const Route = createFileRoute("/_authenticated/accounts")({
   component: AccountsPage,
   head: () => ({
     meta: [
-      { title: "Accounts â€” FEDERAL RESERVE" },
-      { name: "description", content: "View all of your FEDERAL RESERVE accounts and balances." },
+      { title: "Accounts â€” Wells Fargo" },
+      { name: "description", content: "View all of your Wells Fargo accounts and balances." },
     ],
   }),
 });
