@@ -36,7 +36,7 @@ function AccountsPage() {
       <AppHeader title="Accounts" />
 
       <section className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
-        <div className="mb-6 rounded-2xl bg-gradient-to-br from-[#003A70] to-[#002A52] p-6 text-white shadow-sm">
+        <div className="mb-6 rounded-2xl bg-gradient-to-br from-[#D71E28] to-[#A3141C] p-6 text-white shadow-sm">
           <p className="text-sm text-red-100">Total available across all accounts</p>
           <p className="mt-1 text-3xl font-bold sm:text-4xl">{isLoading ? "â€¦" : fmt(totalAvailable)}</p>
         </div>
@@ -46,7 +46,7 @@ function AccountsPage() {
             <div key={a.name} className="rounded-2xl bg-white p-5 shadow-sm">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-[#003A70]/10 p-2.5 text-[#003A70]"><a.icon className="h-5 w-5" /></div>
+                  <div className="rounded-lg bg-[#D71E28]/10 p-2.5 text-[#D71E28]"><a.icon className="h-5 w-5" /></div>
                   <div>
                     <div className="text-sm font-semibold text-slate-900">{a.name}</div>
                     <div className="text-xs text-slate-500">•••• {a.num}</div>
@@ -62,7 +62,7 @@ function AccountsPage() {
               <p className="mt-3 text-xs text-slate-500">{a.desc}</p>
               <Link
                 to="/transfer"
-                className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-[#003A70] hover:underline"
+                className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-[#D71E28] hover:underline"
               >
                 Move money <ArrowRight className="h-3.5 w-3.5" />
               </Link>
@@ -71,7 +71,7 @@ function AccountsPage() {
         </div>
 
         <div className="mt-6">
-          <Link to="/transactions" className="text-sm font-medium text-[#003A70] hover:underline">
+          <Link to="/transactions" className="text-sm font-medium text-[#D71E28] hover:underline">
             View transaction history â†’
           </Link>
         </div>

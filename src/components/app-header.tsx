@@ -17,7 +17,7 @@ function Logo() {
   return (
     <Link to="/dashboard" className="flex items-center gap-2">
       <img src="/logo.png" alt="Logo" className="h-12 w-12 shrink-0 object-contain sm:h-14 sm:w-14" />
-      <span className="text-base font-extrabold tracking-tight text-[#003A70] sm:text-xl">FEDERAL RESERVE</span>
+      <span className="text-base font-extrabold tracking-tight text-[#D71E28] sm:text-xl">FEDERAL RESERVE</span>
     </Link>
   );
 }
@@ -37,11 +37,11 @@ export function AppHeader({ title }: { title: string }) {
         <Logo />
         <nav className="hidden justify-center gap-6 text-sm font-medium text-slate-700 lg:flex">
           {NAV_LINKS.map(l => l.to ? (
-            <Link key={l.label} to={l.to} className="hover:text-[#003A70]" activeProps={{ className: "text-[#003A70]" }}>
+            <Link key={l.label} to={l.to} className="hover:text-[#D71E28]" activeProps={{ className: "text-[#D71E28]" }}>
               {l.label}
             </Link>
           ) : (
-            <a key={l.label} href="#" className="hover:text-[#003A70]">{l.label}</a>
+            <a key={l.label} href="#" className="hover:text-[#D71E28]">{l.label}</a>
           ))}
         </nav>
         <div className="flex items-center gap-2 sm:gap-3">
@@ -83,9 +83,9 @@ export function AppFooter() {
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 py-4 text-xs text-slate-500 sm:px-6">
         <span>Â© 2026 FEDERAL RESERVE. All rights reserved.</span>
         <span className="hidden sm:inline">|</span>
-        <a href="#" className="text-[#003A70]">Privacy Policy</a>
-        <a href="#" className="text-[#003A70]">Terms of Use</a>
-        <a href="#" className="text-[#003A70]">Security Center</a>
+        <a href="#" className="text-[#D71E28]">Privacy Policy</a>
+        <a href="#" className="text-[#D71E28]">Terms of Use</a>
+        <a href="#" className="text-[#D71E28]">Security Center</a>
       </div>
     </footer>
   );

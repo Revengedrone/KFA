@@ -173,7 +173,7 @@ function AdminPage() {
                 Your account isn't flagged as an admin. Ask whoever manages the Supabase project to
                 set <code className="rounded bg-slate-100 px-1">is_admin = true</code> on your profile row.
               </p>
-              <Link to="/dashboard" className="mt-4 inline-block text-sm font-medium text-[#003A70] hover:underline">
+              <Link to="/dashboard" className="mt-4 inline-block text-sm font-medium text-[#D71E28] hover:underline">
                 ← Back to dashboard
               </Link>
             </div>
@@ -214,12 +214,12 @@ function AdminPage() {
                     onChange={e => setNameInputs(n => ({ ...n, [p.id]: e.target.value }))}
                     placeholder="e.g. John Smith"
                     maxLength={100}
-                    className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#003A70] sm:max-w-xs"
+                    className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#D71E28] sm:max-w-xs"
                   />
                   <button
                     onClick={() => applyName(p.id)}
                     disabled={nameMutation.isPending}
-                    className="rounded-lg bg-[#003A70] px-3 py-2 text-xs font-semibold text-white hover:bg-[#002A52] disabled:opacity-60"
+                    className="rounded-lg bg-[#D71E28] px-3 py-2 text-xs font-semibold text-white hover:bg-[#A3141C] disabled:opacity-60"
                   >
                     Save name
                   </button>
@@ -241,14 +241,14 @@ function AdminPage() {
                     value={labels[p.id] ?? ""}
                     onChange={e => setLabels(l => ({ ...l, [p.id]: e.target.value }))}
                     placeholder="Note (optional)"
-                    className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#003A70] sm:min-w-[10rem]"
+                    className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#D71E28] sm:min-w-[10rem]"
                   />
                   <input
                     type="datetime-local"
                     value={dates[p.id] ?? ""}
                     onChange={e => setDates(d => ({ ...d, [p.id]: e.target.value }))}
                     max={todayLocalDatetime()}
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#003A70]"
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#D71E28]"
                   />
                   <div className="flex gap-2">
                     <button
@@ -324,7 +324,7 @@ function AdminPage() {
                   <button
                     onClick={() => applyMonthlyFigures(p.id, p.monthlyIncome, p.monthlyExpenses)}
                     disabled={monthlyFiguresMutation.isPending}
-                    className="rounded-lg bg-[#003A70] px-3 py-2 text-xs font-semibold text-white hover:bg-[#002A52] disabled:opacity-60"
+                    className="rounded-lg bg-[#D71E28] px-3 py-2 text-xs font-semibold text-white hover:bg-[#A3141C] disabled:opacity-60"
                   >
                     Save
                   </button>
@@ -344,7 +344,7 @@ function AdminPage() {
         )}
 
         <div className="mt-6">
-          <Link to="/dashboard" className="text-sm font-medium text-[#003A70] hover:underline">← Back to dashboard</Link>
+          <Link to="/dashboard" className="text-sm font-medium text-[#D71E28] hover:underline">← Back to dashboard</Link>
         </div>
       </section>
 
