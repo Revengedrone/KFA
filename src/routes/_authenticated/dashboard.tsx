@@ -9,14 +9,9 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { getMyBalance, adjustMyBalance } from "@/lib/balance.functions";
 import { getMyTransactions } from "@/lib/transactions.functions";
-import slide1 from "@/assets/img1.png";
-import slide2 from "@/assets/img1.png";
-import slide3 from "@/assets/img1.png";
-import slide4 from "@/assets/img1.png";
-import slide5 from "@/assets/img1.png";
-import slide6 from "@/assets/img1.png";
+import desert from "@/assets/desert.png";
 
-const heroImages = [slide1, slide2, slide3, slide4, slide5, slide6];
+const heroImages = [desert];
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -225,7 +220,7 @@ function Dashboard() {
             }`}
           />
         ))}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#D71E28]/80 via-[#C01B24]/70 to-[#FF4D57]/60" />
+        <div className="absolute inset-0 bg-black/30" />
         <div className="relative mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 sm:py-12 md:grid-cols-2 md:gap-8">
           <div className="flex flex-col justify-center text-white">
             <p className="text-base font-light sm:text-lg">Good morning,</p>
@@ -593,5 +588,3 @@ function ModalShell({ title, onClose, children }: { title: string; onClose: () =
     </div>
   );
 }
-
-
